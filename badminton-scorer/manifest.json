@@ -1,0 +1,47 @@
+{
+  "name": "Badminton Scorer",
+  "description": "Track score during a badminton match. Use the lap button to score for the active player.",
+  "version": "1.0.0",
+  "targetSdk": 1,
+  "in": [
+    {
+      "name": "duration",
+      "source": "Activity/Move/-1/Duration/Current",
+      "type": "subscribe"
+    },
+    {
+      "name": "lapButtonPress",
+      "source": "Activity/Move/-1/Lap/Count",
+      "type": "subscribe"
+    }
+  ],
+  "out": [
+    {
+      "name": "playerOneScore",
+      "type": "integer"
+    },
+    {
+      "name": "playerTwoScore",
+      "type": "integer"
+    },
+    {
+      "name": "playerOneGames",
+      "type": "integer"
+    },
+    {
+      "name": "playerTwoGames",
+      "type": "integer"
+    },
+    {
+      "name": "activePlayer",
+      "type": "integer"
+    },
+    {
+      "name": "statusText",
+      "type": "string"
+    }
+  ],
+  "activities": [
+    "Badminton"
+  ]
+}
