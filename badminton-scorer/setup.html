@@ -1,0 +1,53 @@
+<uiView onActivate="
+  var idx = 0, isD = 1, sf = 0, ysf = 1;
+
+  function update() {
+    var labels = ['GAME TYPE', 'SERVES 1ST', 'YOUR SIDE', 'START'];
+    setText('#field-label', labels[idx]);
+
+    var val;
+    if (idx == 0) val = isD == 1 ? 'DOUBLES' : 'SINGLES';
+    else if (idx == 1) val = sf == 1 ? 'YOU' : 'OPP';
+    else if (idx == 2) val = ysf == 1 ? 'RIGHT' : 'LEFT';
+    else val = 'PLAY';
+    setText('#field-value', val);
+
+    setText('#hint-line', idx == 3 ? 'v to play' : '^ next  v toggle');
+  }
+
+  $.subscribe('Zapp/{zapp_index}/Output/setupFieldIdx',      function(v) { idx = v;  update(); });
+  $.subscribe('Zapp/{zapp_index}/Output/isDoubles',          function(v) { isD = v;  update(); });
+  $.subscribe('Zapp/{zapp_index}/Output/setupServesFirst',   function(v) { sf = v;   update(); });
+  $.subscribe('Zapp/{zapp_index}/Output/setupYouServeFirst', function(v) { ysf = v;  update(); });
+">
+  <div id="suuntoplus">
+
+    <div class="sp-vertical-center p-hc" style="top:14%;">
+      <span class="sp-t-m">SETUP</span>
+    </div>
+
+    <div class="sp-vertical-center p-hc" style="top:42%;">
+      <span id="field-label" class="sp-t-s">MODE</span>
+    </div>
+
+    <div class="sp-vertical-center p-hc" style="top:58%;color:#FF6600;">
+      <span id="field-value" class="sp-t-m">DOUBLES</span>
+    </div>
+
+    <div class="sp-vertical-center p-hc" style="top:74%;">
+      <span id="hint-line" class="sp-b-s">^ next  v toggle</span>
+    </div>
+    <div class="sp-vertical-center p-hc" style="top:84%;">
+      <span class="sp-b-s">hold v to start</span>
+    </div>
+
+    <userInput>
+      <pushButton name="up"
+        onClick="$.put('/Zapp/{zapp_index}/Event', 1, null, 'int32');" />
+      <pushButton name="down"
+        onClick="$.put('/Zapp/{zapp_index}/Event', 2, null, 'int32');"
+        onLongPressStart="$.put('/Zapp/{zapp_index}/Event', 4, null, 'int32');" />
+    </userInput>
+
+  </div>
+</uiView>

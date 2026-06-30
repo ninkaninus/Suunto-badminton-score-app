@@ -1,0 +1,147 @@
+<uiView onActivate="
+  var ap = -1, p1s = -1, p2s = -1;
+  var g1w = 0, g1p1 = 0, g1p2 = 0;
+  var g2w = 0, g2p1 = 0, g2p2 = 0;
+  var yor = -1, isDbl = 0;
+
+  function dot(id, filled) {
+    setText(id, filled ? 'o' : '.');
+    setStyle(id, 'color', filled ? '#FF6600' : '#555555');
+  }
+
+  function updateCourt() {
+    if (ap == -1 || p1s == -1 || p2s == -1) return;
+    if (ap == 1) {
+      var p1R = (p1s % 2 == 0);
+      dot('#dot-p1-l', !p1R);
+      dot('#dot-p1-r',  p1R);
+      dot('#dot-p2-l', false);
+      dot('#dot-p2-r', false);
+    } else {
+      dot('#dot-p1-l', false);
+      dot('#dot-p1-r', false);
+      var oppR = (p2s % 2 == 0);
+      dot('#dot-p2-l',  oppR);
+      dot('#dot-p2-r', !oppR);
+    }
+    updateServeWho();
+  }
+
+  function updateServeWho() {
+    if (ap == -1 || p1s == -1 || yor == -1 || isDbl == 0 || ap != 1) {
+      setStyle('#serve-who', 'color', '#000000');
+      return;
+    }
+    var youServe = (yor == 1) == (p1s % 2 == 0);
+    setText('#serve-who', youServe ? 'YOU' : 'PTR');
+    setStyle('#serve-who', 'color', youServe ? '#FF6600' : '#FFFFFF');
+  }
+
+  function updateHistory() {
+    if (g1w == 0) return;
+    if (g2w == 0) {
+      // One game done: show in right slot (h1), left slot (h2) stays hidden
+      setText('#h1-p2', '' + g1p2);
+      setText('#h1-p1', '' + g1p1);
+      setStyle('#h1-p2', 'color', g1w == 2 ? '#FF6600' : '#888888');
+      setStyle('#h1-p1', 'color', g1w == 1 ? '#FF6600' : '#888888');
+      setStyle('#h1-sep', 'background', '#666666');
+    } else {
+      // Two games done: most recent (g2) → right slot (h1), older (g1) → left slot (h2)
+      setText('#h1-p2', '' + g2p2);
+      setText('#h1-p1', '' + g2p1);
+      setStyle('#h1-p2', 'color', g2w == 2 ? '#FF6600' : '#888888');
+      setStyle('#h1-p1', 'color', g2w == 1 ? '#FF6600' : '#888888');
+      setStyle('#h1-sep', 'background', '#666666');
+      setText('#h2-p2', '' + g1p2);
+      setText('#h2-p1', '' + g1p1);
+      setStyle('#h2-p2', 'color', g1w == 2 ? '#FF6600' : '#888888');
+      setStyle('#h2-p1', 'color', g1w == 1 ? '#FF6600' : '#888888');
+      setStyle('#h2-sep', 'background', '#666666');
+    }
+  }
+
+  setStyle('#h1-p2',  'color', '#000000');
+  setStyle('#h1-p1',  'color', '#000000');
+  setStyle('#h1-sep', 'background', '#000000');
+  setStyle('#h2-p2',  'color', '#000000');
+  setStyle('#h2-p1',  'color', '#000000');
+  setStyle('#h2-sep', 'background', '#000000');
+  setStyle('#serve-who', 'color', '#000000');
+
+  $.subscribe('Zapp/{zapp_index}/Output/activePlayer',    function(v) { ap  = v; setStyle('#p1-block', 'color', v == 1 ? '#FF6600' : '#FFFFFF'); setStyle('#p2-block', 'color', v == 2 ? '#FF6600' : '#FFFFFF'); updateCourt(); });
+  $.subscribe('Zapp/{zapp_index}/Output/playerOneScore',  function(v) { p1s = v; updateCourt(); });
+  $.subscribe('Zapp/{zapp_index}/Output/playerTwoScore',  function(v) { p2s = v; updateCourt(); });
+  $.subscribe('Zapp/{zapp_index}/Output/youOnRight',      function(v) { yor = v; updateServeWho(); });
+  $.subscribe('Zapp/{zapp_index}/Output/isDoubles',       function(v) { isDbl = v; updateServeWho(); });
+  $.subscribe('Zapp/{zapp_index}/Output/game1Winner',     function(v) { g1w = v; updateHistory(); });
+  $.subscribe('Zapp/{zapp_index}/Output/game1P1Score',    function(v) { g1p1 = v; updateHistory(); });
+  $.subscribe('Zapp/{zapp_index}/Output/game1P2Score',    function(v) { g1p2 = v; updateHistory(); });
+  $.subscribe('Zapp/{zapp_index}/Output/game2Winner',     function(v) { g2w = v; updateHistory(); });
+  $.subscribe('Zapp/{zapp_index}/Output/game2P1Score',    function(v) { g2p1 = v; updateHistory(); });
+  $.subscribe('Zapp/{zapp_index}/Output/game2P2Score',    function(v) { g2p2 = v; updateHistory(); });
+">
+  <div id="suuntoplus">
+
+    <!-- Right history slot: most recently finished game -->
+    <div class="sp-vertical-center" style="top:30%;left:35%;">
+      <span id="h1-p2" class="sp-d-s">0</span>
+    </div>
+    <div id="h1-sep" class="cm-fg" style="top:50%;left:34%;width:14%;height:2px;opacity:0.5"></div>
+    <div class="sp-vertical-center" style="top:49%;left:35%;">
+      <span id="h1-p1" class="sp-d-s">0</span>
+    </div>
+
+    <!-- Left history slot: game before that -->
+    <div class="sp-vertical-center" style="top:30%;left:13%;">
+      <span id="h2-p2" class="sp-d-s">0</span>
+    </div>
+    <div id="h2-sep" class="cm-fg" style="top:50%;left:12%;width:14%;height:2px;opacity:0.5"></div>
+    <div class="sp-vertical-center" style="top:49%;left:13%;">
+      <span id="h2-p1" class="sp-d-s">0</span>
+    </div>
+
+    <!-- OPP dots: above p2 score -->
+    <div class="sp-vertical-center" style="top:14%;left:calc(63% - 50%e);">
+      <span id="dot-p2-l" class="sp-t-m">.</span>
+    </div>
+    <div class="sp-vertical-center" style="top:14%;left:calc(81% - 50%e);">
+      <span id="dot-p2-r" class="sp-t-m">.</span>
+    </div>
+
+    <!-- P2 score -->
+    <div id="p2-block" class="sp-vertical-center" style="top:19%;left:calc(72% - 50%e);">
+      <span class="sp-d-l f-num"><eval input="Zapp/{zapp_index}/Output/playerTwoScore" outputFormat="Count_Twodigits" default="0" /></span>
+    </div>
+
+    <div class="cm-fg" style="top:calc(50% - 1px);left:calc(72% - 50%e);width:30%;height:2px;opacity:0.5;"></div>
+
+    <!-- P1 score -->
+    <div id="p1-block" class="sp-vertical-center" style="top:48%;left:calc(72% - 50%e);">
+      <span class="sp-d-l f-num"><eval input="Zapp/{zapp_index}/Output/playerOneScore" outputFormat="Count_Twodigits" default="0" /></span>
+    </div>
+
+    <!-- YOUR dots: below p1 score -->
+    <div class="sp-vertical-center" style="top:71%;left:calc(63% - 50%e);">
+      <span id="dot-p1-l" class="sp-t-m">.</span>
+    </div>
+    <div class="sp-vertical-center" style="top:71%;left:calc(81% - 50%e);">
+      <span id="dot-p1-r" class="sp-t-m">.</span>
+    </div>
+
+    <!-- YOU / PTR server indicator (doubles only, your team serving) -->
+    <div class="sp-vertical-center p-hc" style="top:80%;">
+      <span id="serve-who" class="sp-b-s">---</span>
+    </div>
+
+    <userInput>
+      <pushButton name="up"
+        onClick="$.put('/Zapp/{zapp_index}/Event', 1, null, 'int32'); $.put('/Activity/Trigger', 23);"
+        onLongPressStart="$.put('/Zapp/{zapp_index}/Event', 3, null, 'int32');" />
+      <pushButton name="down"
+        onClick="$.put('/Zapp/{zapp_index}/Event', 2, null, 'int32'); $.put('/Activity/Trigger', 23);"
+        onLongPressStart="$.put('/Zapp/{zapp_index}/Event', 4, null, 'int32');" />
+    </userInput>
+
+  </div>
+</uiView>

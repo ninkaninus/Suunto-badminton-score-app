@@ -1,47 +1,31 @@
 {
   "name": "Badminton Scorer",
   "description": "Track score during a badminton match. Use the lap button to score for the active player.",
-  "version": "1.0.0",
-  "targetSdk": 1,
-  "in": [
-    {
-      "name": "duration",
-      "source": "Activity/Move/-1/Duration/Current",
-      "type": "subscribe"
-    },
-    {
-      "name": "lapButtonPress",
-      "source": "Activity/Move/-1/Lap/Count",
-      "type": "subscribe"
-    }
+  "author": "William Bergmann Børresen",
+  "version": "2.7",
+  "type": "feature",
+  "usage": "workout",
+  "modificationTime": 1782345600,
+  "template": [
+    { "name": "setup.html" },
+    { "name": "score.html" },
+    { "name": "match-over.html" }
   ],
   "out": [
-    {
-      "name": "playerOneScore",
-      "type": "integer"
-    },
-    {
-      "name": "playerTwoScore",
-      "type": "integer"
-    },
-    {
-      "name": "playerOneGames",
-      "type": "integer"
-    },
-    {
-      "name": "playerTwoGames",
-      "type": "integer"
-    },
-    {
-      "name": "activePlayer",
-      "type": "integer"
-    },
-    {
-      "name": "statusText",
-      "type": "string"
-    }
-  ],
-  "activities": [
-    "Badminton"
+    { "name": "playerOneScore", "log": true, "shownName": "Your score", "format": "Count_Twodigits" },
+    { "name": "playerTwoScore", "log": true, "shownName": "Opp score", "format": "Count_Twodigits" },
+    { "name": "activePlayer" },
+    { "name": "game1Winner" },
+    { "name": "game2Winner" },
+    { "name": "setupFieldIdx" },
+    { "name": "isDoubles" },
+    { "name": "setupServesFirst" },
+    { "name": "setupYouServeFirst" },
+    { "name": "youOnRight" },
+    { "name": "game1P1Score" },
+    { "name": "game1P2Score" },
+    { "name": "game2P1Score" },
+    { "name": "game2P2Score" },
+    { "name": "totalPoints", "log": true, "shownName": "Total points", "format": "Count_Threedigits" }
   ]
 }
