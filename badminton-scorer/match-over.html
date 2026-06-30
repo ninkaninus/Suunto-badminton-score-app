@@ -18,6 +18,8 @@
     setText('#game-detail', d);
   }
 
+  setStyle('#mo-note', 'color', '#666666');
+
   $.subscribe('Zapp/{zapp_index}/Output/playerOneScore', function(v) { p1s = v; update(); });
   $.subscribe('Zapp/{zapp_index}/Output/playerTwoScore', function(v) { p2s = v; update(); });
   $.subscribe('Zapp/{zapp_index}/Output/game1Winner',    function(v) { g1w = v; update(); });
@@ -29,25 +31,41 @@
 ">
   <div id="suuntoplus">
 
-    <div class="sp-vertical-center p-hc" style="top:14%;">
+    <div class="sp-vertical-center p-hc" style="top:8%;">
       <span class="sp-t-m">MATCH OVER</span>
     </div>
 
-    <div class="sp-vertical-center p-hc" style="top:32%;">
+    <div class="sp-vertical-center p-hc" style="top:21%;">
       <span id="winner-line" class="sp-t-m">...</span>
     </div>
 
-    <div class="sp-vertical-center p-hc" style="top:40%;">
+    <div class="sp-vertical-center p-hc" style="top:28%;">
       <span id="score-line" class="sp-d-l f-num">-</span>
     </div>
 
-    <div class="sp-vertical-center p-hc" style="top:66%;">
-      <span id="game-detail" class="sp-t-s">...</span>
+    <div class="sp-vertical-center p-hc" style="top:56%;">
+      <span id="game-detail" class="sp-t-m">...</span>
     </div>
 
-    <div class="sp-vertical-center p-hc" style="top:82%;">
-      <span class="sp-b-s">hold back to save</span>
+    <!-- Single-press actions (long-press either button = undo, implicit) -->
+    <div class="sp-vertical-center p-hc" style="top:68%;">
+      <span class="sp-b-s">^ stop   v new match</span>
     </div>
+    <div class="sp-vertical-center p-hc" style="top:77%;">
+      <span class="sp-b-s">hold v to undo</span>
+    </div>
+    <div class="sp-vertical-center p-hc" style="top:86%;">
+      <span id="mo-note" class="sp-b-s">not saved</span>
+    </div>
+
+    <userInput>
+      <!-- "up" is intentionally left uncaptured so the watch's native
+           upper-button pause/stop (with its built-in save prompt) still works.
+           "down": tap = new match, hold = undo. -->
+      <pushButton name="down"
+        onClick="$.put('/Zapp/{zapp_index}/Event', 5, null, 'int32');"
+        onLongPressStart="$.put('/Zapp/{zapp_index}/Event', 4, null, 'int32');" />
+    </userInput>
 
   </div>
 </uiView>

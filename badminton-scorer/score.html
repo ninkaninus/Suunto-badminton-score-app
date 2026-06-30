@@ -4,37 +4,52 @@
   var g2w = 0, g2p1 = 0, g2p2 = 0;
   var yor = -1, isDbl = 0;
 
+  // Opponent marker: orange 'o' on their service court, faint '.' otherwise.
   function dot(id, filled) {
     setText(id, filled ? 'o' : '.');
     setStyle(id, 'color', filled ? '#FF6600' : '#555555');
   }
 
+  // Your marker is a 'Y' showing where you should stand. It is always shown in
+  // exactly one service court: orange when you are the server, gray otherwise.
+  function youDot(id, state) {
+    setText(id, state == 'off' ? '.' : 'Y');
+    setStyle(id, 'color', state == 'serve' ? '#FF6600' : state == 'stand' ? '#999999' : '#555555');
+  }
+
   function updateCourt() {
     if (ap == -1 || p1s == -1 || p2s == -1) return;
-    if (ap == 1) {
-      var p1R = (p1s % 2 == 0);
-      dot('#dot-p1-l', !p1R);
-      dot('#dot-p1-r',  p1R);
-      dot('#dot-p2-l', false);
-      dot('#dot-p2-r', false);
+
+    // Which service court you stand in for the current serve, and whether it is
+    // actually you serving (orange) rather than your partner / the opponent.
+    var youR, youServing;
+    if (isDbl == 1) {
+      // Doubles: you keep your side until your pair scores on serve, so always
+      // stand on your tracked side - whether serving, receiving or neither.
+      youR = (yor == 1);
+      youServing = (ap == 1) && ((yor == 1) == (p1s % 2 == 0));
+    } else if (ap == 1) {
+      // Singles, you serve: from the right court when your score is even.
+      youR = (p1s % 2 == 0);
+      youServing = true;
     } else {
-      dot('#dot-p1-l', false);
-      dot('#dot-p1-r', false);
+      // Singles, you receive: diagonally opposite the server (their score).
+      youR = (p2s % 2 == 0);
+      youServing = false;
+    }
+    var mine = youServing ? 'serve' : 'stand';
+    youDot('#dot-p1-l', youR ? 'off' : mine);
+    youDot('#dot-p1-r', youR ? mine : 'off');
+
+    // Opponent's server marker, shown only while their side is serving.
+    if (ap == 2) {
       var oppR = (p2s % 2 == 0);
       dot('#dot-p2-l',  oppR);
       dot('#dot-p2-r', !oppR);
+    } else {
+      dot('#dot-p2-l', false);
+      dot('#dot-p2-r', false);
     }
-    updateServeWho();
-  }
-
-  function updateServeWho() {
-    if (ap == -1 || p1s == -1 || yor == -1 || isDbl == 0 || ap != 1) {
-      setStyle('#serve-who', 'color', '#000000');
-      return;
-    }
-    var youServe = (yor == 1) == (p1s % 2 == 0);
-    setText('#serve-who', youServe ? 'YOU' : 'PTR');
-    setStyle('#serve-who', 'color', youServe ? '#FF6600' : '#FFFFFF');
   }
 
   function updateHistory() {
@@ -67,13 +82,12 @@
   setStyle('#h2-p2',  'color', '#000000');
   setStyle('#h2-p1',  'color', '#000000');
   setStyle('#h2-sep', 'background', '#000000');
-  setStyle('#serve-who', 'color', '#000000');
 
   $.subscribe('Zapp/{zapp_index}/Output/activePlayer',    function(v) { ap  = v; setStyle('#p1-block', 'color', v == 1 ? '#FF6600' : '#FFFFFF'); setStyle('#p2-block', 'color', v == 2 ? '#FF6600' : '#FFFFFF'); updateCourt(); });
   $.subscribe('Zapp/{zapp_index}/Output/playerOneScore',  function(v) { p1s = v; updateCourt(); });
   $.subscribe('Zapp/{zapp_index}/Output/playerTwoScore',  function(v) { p2s = v; updateCourt(); });
-  $.subscribe('Zapp/{zapp_index}/Output/youOnRight',      function(v) { yor = v; updateServeWho(); });
-  $.subscribe('Zapp/{zapp_index}/Output/isDoubles',       function(v) { isDbl = v; updateServeWho(); });
+  $.subscribe('Zapp/{zapp_index}/Output/youOnRight',      function(v) { yor = v; updateCourt(); });
+  $.subscribe('Zapp/{zapp_index}/Output/isDoubles',       function(v) { isDbl = v; updateCourt(); });
   $.subscribe('Zapp/{zapp_index}/Output/game1Winner',     function(v) { g1w = v; updateHistory(); });
   $.subscribe('Zapp/{zapp_index}/Output/game1P1Score',    function(v) { g1p1 = v; updateHistory(); });
   $.subscribe('Zapp/{zapp_index}/Output/game1P2Score',    function(v) { g1p2 = v; updateHistory(); });
@@ -102,10 +116,10 @@
     </div>
 
     <!-- OPP dots: above p2 score -->
-    <div class="sp-vertical-center" style="top:14%;left:calc(63% - 50%e);">
+    <div class="sp-vertical-center" style="top:12%;left:calc(62% - 50%e);">
       <span id="dot-p2-l" class="sp-t-m">.</span>
     </div>
-    <div class="sp-vertical-center" style="top:14%;left:calc(81% - 50%e);">
+    <div class="sp-vertical-center" style="top:12%;left:calc(82% - 50%e);">
       <span id="dot-p2-r" class="sp-t-m">.</span>
     </div>
 
@@ -122,16 +136,11 @@
     </div>
 
     <!-- YOUR dots: below p1 score -->
-    <div class="sp-vertical-center" style="top:71%;left:calc(63% - 50%e);">
+    <div class="sp-vertical-center" style="top:73%;left:calc(62% - 50%e);">
       <span id="dot-p1-l" class="sp-t-m">.</span>
     </div>
-    <div class="sp-vertical-center" style="top:71%;left:calc(81% - 50%e);">
+    <div class="sp-vertical-center" style="top:73%;left:calc(82% - 50%e);">
       <span id="dot-p1-r" class="sp-t-m">.</span>
-    </div>
-
-    <!-- YOU / PTR server indicator (doubles only, your team serving) -->
-    <div class="sp-vertical-center p-hc" style="top:80%;">
-      <span id="serve-who" class="sp-b-s">---</span>
     </div>
 
     <userInput>

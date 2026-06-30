@@ -91,4 +91,67 @@ check('both scoring onClick handlers fire silent lap (Trigger 23)',
 check('no undo (long-press) handler fires a lap',
   longPresses.length === 2 && longPresses.every((h) => !/\/Activity\/Trigger/.test(h)));
 
+console.log('\nUndo restores score + serve + side (fresh match):');
+const u = loadApp(APP_DIR);
+u.event(4); // start; defaults -> opponent serves first (activePlayer 2)
+check('opponent serves first (activePlayer = 2)', u.output.activePlayer === 2);
+u.event(2); // you score -> you win the serve
+check('your point wins serve (activePlayer = 1, 1-0)',
+  u.output.activePlayer === 1 && u.output.playerOneScore === 1 && u.output.youOnRight === 1);
+u.event(2); // serving again -> your side switches
+check('serving again switches your side (youOnRight 1 -> 0, 2-0)',
+  u.output.youOnRight === 0 && u.output.playerOneScore === 2);
+u.event(3); // undo last point (long-press up)
+check('undo restores side + score (youOnRight 1, 1-0, you still serving)',
+  u.output.youOnRight === 1 && u.output.playerOneScore === 1 && u.output.activePlayer === 1);
+u.event(4); // undo again (long-press down) - both buttons undo
+check('second undo restores serve to opponent (activePlayer 2, 0-0)',
+  u.output.activePlayer === 2 && u.output.playerOneScore === 0);
+u.event(3); // nothing left to undo
+check('undo at 0-0 is a no-op', u.output.playerOneScore === 0 && u.output.playerTwoScore === 0);
+
+console.log('\nUndo rewinds across a finished game:');
+const g = loadApp(APP_DIR);
+g.event(4); // start
+for (let i = 0; i < 20; i++) g.event(2); // you -> 20-0
+g.event(2); // 21-0: game won, resets to 0-0, games 1-0
+check('game won: reset to 0-0, totalPoints 21, game1 winner = you',
+  g.output.playerOneScore === 0 && g.output.totalPoints === 21 && g.output.game1Winner === 1);
+g.event(3); // undo the game-winning point
+check('undo rewinds the finished game back to 20-0',
+  g.output.playerOneScore === 20 && g.output.totalPoints === 20 && g.output.game1Winner === 0);
+
+console.log('\nUndo on the match-over screen un-ends the match:');
+const m = loadApp(APP_DIR);
+m.event(4); // start
+for (let i = 0; i < 21; i++) m.event(2); // game 1: 21-0
+for (let i = 0; i < 21; i++) m.event(2); // game 2: 21-0 -> match over
+check('two games won -> match-over screen', m.ui().template === 'match-over');
+m.event(4); // hold "down" on match-over = undo
+check('undo un-ends the match -> back to score screen', m.ui().template === 'score');
+check('final game restored to 20-0, game 2 not recorded',
+  m.output.playerOneScore === 20 && m.output.playerTwoScore === 0 && m.output.game2Winner === 0);
+m.event(2); // re-score the match point
+check('re-scoring wins the match again', m.ui().template === 'match-over');
+
+console.log('\nUndo past 0-0 returns to setup:');
+const s = loadApp(APP_DIR);
+s.event(4); // start -> score
+s.event(2); // 1-0
+s.event(3); // undo -> 0-0, still on score
+check('undo to 0-0 stays on score screen',
+  s.ui().template === 'score' && s.output.playerOneScore === 0);
+s.event(3); // undo with empty stack -> setup
+check('undo past 0-0 returns to setup', s.ui().template === 'setup');
+
+console.log('\nNew match (UP on match-over) resets to setup:');
+const r = loadApp(APP_DIR);
+r.event(4);
+for (let i = 0; i < 21; i++) r.event(2);
+for (let i = 0; i < 21; i++) r.event(2); // match over
+check('match-over reached', r.ui().template === 'match-over');
+r.event(5); // new match
+check('new match clears score and returns to setup',
+  r.ui().template === 'setup' && r.output.totalPoints === 0 && r.output.game1Winner === 0);
+
 console.log(`\nAll ${passed} checks passed.`);

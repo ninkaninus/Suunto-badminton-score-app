@@ -12,7 +12,8 @@ var state = {
   servingTeam: 2,
   youOnRight: true,
   youOnRightAtGameStart: true,
-  matchOver: false
+  matchOver: false,
+  pointStack: []
 };
 
 var checkGameOver = function() {
@@ -55,6 +56,29 @@ var matchTotals = function() {
   return { p1: p1, p2: p2, total: p1 + p2 };
 };
 
+// Snapshot taken before every point so undo can fully restore the prior state
+// (score, serving team, your side, games). The stack lets the user press undo
+// repeatedly to walk back several points, even across a finished game — which
+// is also how a wrong server is corrected.
+var pushUndo = function() {
+  state.pointStack.push({
+    p1Score: state.p1Score, p2Score: state.p2Score,
+    servingTeam: state.servingTeam, youOnRight: state.youOnRight,
+    p1Games: state.p1Games, p2Games: state.p2Games,
+    ghLen: state.gameHistory.length, matchOver: state.matchOver
+  });
+};
+
+var popUndo = function() {
+  if (state.pointStack.length == 0) return;
+  var s = state.pointStack.pop();
+  state.p1Score = s.p1Score; state.p2Score = s.p2Score;
+  state.servingTeam = s.servingTeam; state.youOnRight = s.youOnRight;
+  state.p1Games = s.p1Games; state.p2Games = s.p2Games;
+  state.matchOver = s.matchOver;
+  while (state.gameHistory.length > s.ghLen) state.gameHistory.pop();
+};
+
 var sync = function(output) {
   output.playerOneScore = state.p1Score;
   output.playerTwoScore = state.p2Score;
@@ -78,9 +102,43 @@ function onLoad(input, output) {
   sync(output);
 }
 
-function onEvent(input, output, eventId) {
-  if (state.matchOver) return;
+// Undo works while playing and on the match-over screen. Undoing the last
+// remaining point (nothing left on the stack) drops back to setup for a fresh
+// start. Undoing the match-winning point un-ends the match.
+var undoLastPoint = function(output) {
+  if (state.pointStack.length == 0) {
+    state.phase = 'setup';
+    state.setupField = 'mode';
+    currentTemplate = 'setup';
+    sync(output);
+    unload('_cm');
+    return;
+  }
+  var wasOver = state.matchOver;
+  popUndo();
+  sync(output);
+  if (wasOver) {
+    currentTemplate = 'score';
+    unload('_cm');
+  }
+};
 
+// Reset for a new match. The current match's data is lost (a recording keeps a
+// single match's summary). Returns to setup to reconfigure serve/mode.
+var newMatch = function(output) {
+  state.p1Score = 0; state.p2Score = 0;
+  state.p1Games = 0; state.p2Games = 0;
+  state.gameHistory = [];
+  state.pointStack = [];
+  state.matchOver = false;
+  state.phase = 'setup';
+  state.setupField = 'mode';
+  currentTemplate = 'setup';
+  sync(output);
+  unload('_cm');
+};
+
+function onEvent(input, output, eventId) {
   if (state.phase == 'setup') {
     if (eventId == 1) {
       if (state.setupField == 'mode') {
@@ -110,22 +168,28 @@ function onEvent(input, output, eventId) {
     return;
   }
 
-  if (eventId == 1) {
-    state.p2Score++;
-    if (state.servingTeam != 2) { state.servingTeam = 2; }
-    checkGameOver();
-  } else if (eventId == 2) {
-    state.p1Score++;
-    if (state.servingTeam == 1) {
-      state.youOnRight = !state.youOnRight;
+  // Playing, or the match-over screen.
+  if (eventId == 1 || eventId == 2) {
+    if (state.matchOver) return;            // no more scoring once the match is over
+    pushUndo();
+    if (eventId == 1) {
+      state.p2Score++;
+      if (state.servingTeam != 2) { state.servingTeam = 2; }
     } else {
-      state.servingTeam = 1;
+      state.p1Score++;
+      if (state.servingTeam == 1) {
+        state.youOnRight = !state.youOnRight;
+      } else {
+        state.servingTeam = 1;
+      }
     }
     checkGameOver();
-  } else if (eventId == 3) {
-    if (state.p2Score > 0) state.p2Score--;
-  } else if (eventId == 4) {
-    if (state.p1Score > 0) state.p1Score--;
+  } else if (eventId == 3 || eventId == 4) {
+    undoLastPoint(output);                   // also handles match-over and 0-0
+    return;
+  } else if (eventId == 5) {
+    newMatch(output);                        // "new match" from the match-over screen
+    return;
   }
   sync(output);
 }
