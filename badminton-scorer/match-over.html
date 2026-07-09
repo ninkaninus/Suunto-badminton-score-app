@@ -1,0 +1,71 @@
+<uiView onActivate="
+  var p1s = 0, p2s = 0, g1w = 0, g2w = 0;
+  var g1p1 = 0, g1p2 = 0, g2p1 = 0, g2p2 = 0;
+
+  function update() {
+    if (g1w == 0 || g2w == 0) return;
+    var swept = (g1w == g2w);
+    var p1won = swept ? (g1w == 1) : (p1s > p2s);
+    setText('#winner-line', p1won ? 'YOU WIN' : 'OPP WINS');
+    setStyle('#winner-line', 'color', p1won ? '#FF6600' : '#FFFFFF');
+    setText('#score-line', swept ? '2-0' : '2-1');
+    var d;
+    if (swept) {
+      d = g1p1 + '-' + g1p2 + '   ' + g2p1 + '-' + g2p2;
+    } else {
+      d = g1p1 + '-' + g1p2 + '  ' + g2p1 + '-' + g2p2 + '  ' + p1s + '-' + p2s;
+    }
+    setText('#game-detail', d);
+  }
+
+  setStyle('#mo-note', 'color', '#666666');
+
+  $.subscribe('Zapp/{zapp_index}/Output/playerOneScore', function(v) { p1s = v; update(); });
+  $.subscribe('Zapp/{zapp_index}/Output/playerTwoScore', function(v) { p2s = v; update(); });
+  $.subscribe('Zapp/{zapp_index}/Output/game1Winner',    function(v) { g1w = v; update(); });
+  $.subscribe('Zapp/{zapp_index}/Output/game2Winner',    function(v) { g2w = v; update(); });
+  $.subscribe('Zapp/{zapp_index}/Output/game1P1Score',   function(v) { g1p1 = v; update(); });
+  $.subscribe('Zapp/{zapp_index}/Output/game1P2Score',   function(v) { g1p2 = v; update(); });
+  $.subscribe('Zapp/{zapp_index}/Output/game2P1Score',   function(v) { g2p1 = v; update(); });
+  $.subscribe('Zapp/{zapp_index}/Output/game2P2Score',   function(v) { g2p2 = v; update(); });
+">
+  <div id="suuntoplus">
+
+    <div class="sp-vertical-center p-hc" style="top:8%;">
+      <span class="sp-t-m">MATCH OVER</span>
+    </div>
+
+    <div class="sp-vertical-center p-hc" style="top:21%;">
+      <span id="winner-line" class="sp-t-m">...</span>
+    </div>
+
+    <div class="sp-vertical-center p-hc" style="top:28%;">
+      <span id="score-line" class="sp-d-l f-num">-</span>
+    </div>
+
+    <div class="sp-vertical-center p-hc" style="top:56%;">
+      <span id="game-detail" class="sp-t-m">...</span>
+    </div>
+
+    <!-- Single-press actions (long-press either button = undo, implicit) -->
+    <div class="sp-vertical-center p-hc" style="top:68%;">
+      <span class="sp-b-s">^ stop   v new match</span>
+    </div>
+    <div class="sp-vertical-center p-hc" style="top:77%;">
+      <span class="sp-b-s">hold v to undo</span>
+    </div>
+    <div class="sp-vertical-center p-hc" style="top:86%;">
+      <span id="mo-note" class="sp-b-s">not saved</span>
+    </div>
+
+    <userInput>
+      <!-- "up" is intentionally left uncaptured so the watch's native
+           upper-button pause/stop (with its built-in save prompt) still works.
+           "down": tap = new match, hold = undo. -->
+      <pushButton name="down"
+        onClick="$.put('/Zapp/{zapp_index}/Event', 5, null, 'int32');"
+        onLongPressStart="$.put('/Zapp/{zapp_index}/Event', 4, null, 'int32');" />
+    </userInput>
+
+  </div>
+</uiView>
