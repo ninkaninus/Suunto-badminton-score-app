@@ -19,11 +19,13 @@ var state = {
 var checkGameOver = function() {
   var p1 = state.p1Score;
   var p2 = state.p2Score;
+  // BWF 3x15 scoring: game to 15, win by 2 from 14-all, hard cap at 21
+  // (at 20-20 the next point wins).
   var gameWon =
-    (p1 >= 21 && p1 - p2 >= 2) ||
-    (p2 >= 21 && p2 - p1 >= 2) ||
-    p1 == 30 ||
-    p2 == 30;
+    (p1 >= 15 && p1 - p2 >= 2) ||
+    (p2 >= 15 && p2 - p1 >= 2) ||
+    p1 == 21 ||
+    p2 == 21;
   if (!gameWon) return;
   state.gameHistory.push({ p1: p1, p2: p2, winner: p1 > p2 ? 1 : 2 });
   if (p1 > p2) { state.p1Games++; } else { state.p2Games++; }
