@@ -1,11 +1,11 @@
 {
   "name": "Badminton Scorer",
-  "description": "Track score during a badminton match. Use the lap button to score for the active player.",
+  "description": "Badminton scorekeeper using the BWF 3x15 scoring system. UP scores for your opponent, DOWN scores for you; hold either to undo. Tracks games, serve and court side for singles and doubles.",
   "author": "William Bergmann Børresen",
-  "version": "2.7",
+  "version": "3.0",
   "type": "feature",
   "usage": "workout",
-  "modificationTime": 1782345600,
+  "modificationTime": 1784246400,
   "template": [
     { "name": "setup.html" },
     { "name": "score.html" },
