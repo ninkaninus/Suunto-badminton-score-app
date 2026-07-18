@@ -1,19 +1,15 @@
 {
   "name": "Badminton Scorer",
-  "description": "Badminton scorekeeper using the BWF 3x15 scoring system. UP scores for your opponent, DOWN scores for you; hold either to undo. Tracks games, serve and court side for singles and doubles.",
+  "description": "Full badminton scorer: BWF 3x15 games, live serve & court position, undo, and match stats.",
   "author": "William Bergmann Børresen",
-  "version": "3.0",
+  "version": "4.0",
   "type": "feature",
   "usage": "workout",
-  "modificationTime": 1784246400,
-  "template": [
-    { "name": "setup.html" },
-    { "name": "score.html" },
-    { "name": "match-over.html" }
-  ],
+  "modificationTime": 1784325600,
+  "template": [{ "name": "setup.html" }, { "name": "score.html" }, { "name": "match-over.html" }],
   "out": [
-    { "name": "playerOneScore", "log": true, "shownName": "Your score", "format": "Count_Twodigits" },
-    { "name": "playerTwoScore", "log": true, "shownName": "Opp score", "format": "Count_Twodigits" },
+    { "name": "playerOneScore", "format": "Count_Twodigits", "log": true, "shownName": "Your score" },
+    { "name": "playerTwoScore", "format": "Count_Twodigits", "log": true, "shownName": "Opp score" },
     { "name": "activePlayer" },
     { "name": "game1Winner" },
     { "name": "game2Winner" },
@@ -26,6 +22,6 @@
     { "name": "game1P2Score" },
     { "name": "game2P1Score" },
     { "name": "game2P2Score" },
-    { "name": "totalPoints", "log": true, "shownName": "Total points", "format": "Count_Threedigits" }
+    { "name": "totalPoints", "format": "Count_Threedigits", "log": true, "shownName": "Total points" }
   ]
 }

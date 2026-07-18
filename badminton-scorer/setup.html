@@ -11,8 +11,6 @@
     else if (idx == 2) val = ysf == 1 ? 'RIGHT' : 'LEFT';
     else val = 'PLAY';
     setText('#field-value', val);
-
-    setText('#hint-line', idx == 3 ? 'v to play' : '^ next  v toggle');
   }
 
   $.subscribe('Zapp/{zapp_index}/Output/setupFieldIdx',      function(v) { idx = v;  update(); });
@@ -26,16 +24,16 @@
       <span class="sp-t-m">SETUP</span>
     </div>
 
-    <div class="sp-vertical-center p-hc" style="top:42%;">
+    <div class="sp-vertical-center p-hc" style="top:34%;">
       <span id="field-label" class="sp-t-s">MODE</span>
     </div>
 
-    <div class="sp-vertical-center p-hc" style="top:58%;color:#FF6600;">
+    <div class="sp-vertical-center p-hc" style="top:50%;color:#FF6600;">
       <span id="field-value" class="sp-t-m">DOUBLES</span>
     </div>
 
     <div class="sp-vertical-center p-hc" style="top:74%;">
-      <span id="hint-line" class="sp-b-s">^ next  v toggle</span>
+      <span class="sp-b-s">^ next  |  v change</span>
     </div>
     <div class="sp-vertical-center p-hc" style="top:84%;">
       <span class="sp-b-s">hold v to start</span>

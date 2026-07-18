@@ -10,8 +10,8 @@
     setStyle(id, 'color', filled ? '#FF6600' : '#555555');
   }
 
-  // Your marker is a 'Y' showing where you should stand. It is always shown in
-  // exactly one service court: orange when you are the server, gray otherwise.
+  // Your marker is a 'Y' showing where you should stand — orange when you are the
+  // server, gray when just standing, a faint '.' when off (the empty court).
   function youDot(id, state) {
     setText(id, state == 'off' ? '.' : 'Y');
     setStyle(id, 'color', state == 'serve' ? '#FF6600' : state == 'stand' ? '#999999' : '#555555');
@@ -38,8 +38,19 @@
       youServing = false;
     }
     var mine = youServing ? 'serve' : 'stand';
-    youDot('#dot-p1-l', youR ? 'off' : mine);
-    youDot('#dot-p1-r', youR ? mine : 'off');
+    if (isDbl == 1) {
+      // Doubles: your 'Y' marks your court; your partner uses the same marker as
+      // an opponent server — a faint '.' when idle, an orange 'o' when it is the
+      // partner serving (your side serves but not you). Your partner always
+      // stands in the court opposite you.
+      var partnerServing = (ap == 1) && !youServing;
+      youDot(youR ? '#dot-p1-r' : '#dot-p1-l', mine);
+      dot(youR ? '#dot-p1-l' : '#dot-p1-r', partnerServing);
+    } else {
+      // Singles: only your marker; the other court stays empty.
+      youDot('#dot-p1-l', youR ? 'off' : mine);
+      youDot('#dot-p1-r', youR ? mine : 'off');
+    }
 
     // Opponent's server marker, shown only while their side is serving.
     if (ap == 2) {
@@ -52,27 +63,36 @@
     }
   }
 
+  // One numeral's width in %, at the sp-d-s size. A single-digit score is
+  // nudged right by this so its units digit lines up under a two-digit score
+  // (the watch ignores CSS text-align, so we right-align by position — same as
+  // the match-over screen).
+  var DIGIT_W = 7;
+
+  // Render a finished-game slot at base left L%: opp (p2) on top, separator,
+  // you (p1) on the bottom; winner's number orange, loser's gray. Each row is
+  // shifted right by DIGIT_W when it is a single digit, keeping the two rows
+  // right-aligned.
+  function histSlot(topBox, p2id, sepId, botBox, p1id, L, p2val, p1val, winner) {
+    setStyle(topBox, 'left', (p2val < 10 ? L + DIGIT_W : L) + '%');
+    setStyle(botBox, 'left', (p1val < 10 ? L + DIGIT_W : L) + '%');
+    setStyle(sepId, 'left', (L - 1) + '%');
+    setStyle(sepId, 'background', '#666666');
+    setText(p2id, '' + p2val);
+    setText(p1id, '' + p1val);
+    setStyle(p2id, 'color', winner == 2 ? '#FF6600' : '#888888');
+    setStyle(p1id, 'color', winner == 1 ? '#FF6600' : '#888888');
+  }
+
   function updateHistory() {
     if (g1w == 0) return;
     if (g2w == 0) {
-      // One game done: show in right slot (h1), left slot (h2) stays hidden
-      setText('#h1-p2', '' + g1p2);
-      setText('#h1-p1', '' + g1p1);
-      setStyle('#h1-p2', 'color', g1w == 2 ? '#FF6600' : '#888888');
-      setStyle('#h1-p1', 'color', g1w == 1 ? '#FF6600' : '#888888');
-      setStyle('#h1-sep', 'background', '#666666');
+      // One game done: show it in the right slot (h1); left slot (h2) stays hidden.
+      histSlot('#h1t', '#h1-p2', '#h1-sep', '#h1b', '#h1-p1', 35, g1p2, g1p1, g1w);
     } else {
-      // Two games done: most recent (g2) → right slot (h1), older (g1) → left slot (h2)
-      setText('#h1-p2', '' + g2p2);
-      setText('#h1-p1', '' + g2p1);
-      setStyle('#h1-p2', 'color', g2w == 2 ? '#FF6600' : '#888888');
-      setStyle('#h1-p1', 'color', g2w == 1 ? '#FF6600' : '#888888');
-      setStyle('#h1-sep', 'background', '#666666');
-      setText('#h2-p2', '' + g1p2);
-      setText('#h2-p1', '' + g1p1);
-      setStyle('#h2-p2', 'color', g1w == 2 ? '#FF6600' : '#888888');
-      setStyle('#h2-p1', 'color', g1w == 1 ? '#FF6600' : '#888888');
-      setStyle('#h2-sep', 'background', '#666666');
+      // Two games done: most recent (g2) -> right slot (h1), older (g1) -> left slot (h2).
+      histSlot('#h1t', '#h1-p2', '#h1-sep', '#h1b', '#h1-p1', 35, g2p2, g2p1, g2w);
+      histSlot('#h2t', '#h2-p2', '#h2-sep', '#h2b', '#h2-p1', 13, g1p2, g1p1, g1w);
     }
   }
 
@@ -98,20 +118,20 @@
   <div id="suuntoplus">
 
     <!-- Right history slot: most recently finished game -->
-    <div class="sp-vertical-center" style="top:30%;left:35%;">
+    <div id="h1t" class="sp-vertical-center" style="top:30%;left:35%;">
       <span id="h1-p2" class="sp-d-s">0</span>
     </div>
     <div id="h1-sep" class="cm-fg" style="top:50%;left:34%;width:14%;height:2px;opacity:0.5"></div>
-    <div class="sp-vertical-center" style="top:49%;left:35%;">
+    <div id="h1b" class="sp-vertical-center" style="top:49%;left:35%;">
       <span id="h1-p1" class="sp-d-s">0</span>
     </div>
 
     <!-- Left history slot: game before that -->
-    <div class="sp-vertical-center" style="top:30%;left:13%;">
+    <div id="h2t" class="sp-vertical-center" style="top:30%;left:13%;">
       <span id="h2-p2" class="sp-d-s">0</span>
     </div>
     <div id="h2-sep" class="cm-fg" style="top:50%;left:12%;width:14%;height:2px;opacity:0.5"></div>
-    <div class="sp-vertical-center" style="top:49%;left:13%;">
+    <div id="h2b" class="sp-vertical-center" style="top:49%;left:13%;">
       <span id="h2-p1" class="sp-d-s">0</span>
     </div>
 
